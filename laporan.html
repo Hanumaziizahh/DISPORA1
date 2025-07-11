@@ -389,7 +389,7 @@
         </div>
         <nav>
             <ul>
-                <li><a href="beranda.html">Input Barang</a></li>
+                <li><a href="index.html">Input Barang</a></li>
                 <li><a href="barangmasuk1.html">Barang Masuk</a></li>
                 <li><a href="inventaris.html">Permintaan Barang</a></li>
                 <li><a href="laporan.html" class="active">Cetak Laporan</a></li>
@@ -403,7 +403,7 @@
             <div class="dropdown-content">
                 <a href="#">Profil Saya</a>
                 <a href="#">Pengaturan Akun</a>
-                <a href="index.html">logout</a>
+                <a href="index.html">Keluar</a>
             </div>
         </div>
     </header>
@@ -475,13 +475,13 @@
                                         <td class="print-hide"></td>
                                         <td id="totalInitialBalanceUnit" class="text-center"></td> 
                                         <td id="totalInitialBalanceRp" class="text-center"></td>   
-                                        <td id="totalNewReceiptUnit" class="text-center"></td>   
-                                        <td id="totalNewReceiptRp" class="text-center"></td>     
+                                        <td id="totalNewReceiptUnit" class="text-center"></td>    
+                                        <td id="totalNewReceiptRp" class="text-center"></td>      
                                         <td id="totalPengeluaranUnit" class="text-center"></td>   
                                         <td id="totalPengeluaranRp" class="text-center"></td>     
                                         <td class="print-hide"></td>
-                                        <td id="totalSaldoAkhirUnit" class="text-center"></td>   
-                                        <td id="totalSaldoAkhirRp" class="text-center"></td>     
+                                        <td id="totalSaldoAkhirUnit" class="text-center"></td>    
+                                        <td id="totalSaldoAkhirRp" class="text-center"></td>      
                                         <td></td> 
                                     </tr>
                                 </tfoot>
@@ -500,8 +500,7 @@
     
     <script>
         function loadInventoryData() {
-            // Perhatikan: Menggunakan 'inventoryDataBarangMasuk' sesuai dengan key yang Anda gunakan
-            const storedData = localStorage.getItem('inventoryDataBarangMasuk'); 
+            const storedData = localStorage.getItem('inventoryData');
             return storedData ? JSON.parse(storedData) : [];
         }
 
@@ -541,7 +540,7 @@
             const years = new Set();
             inventoryData.forEach(item => {
                 if (item.date) {
-                    // Gunakan objek Date untuk ekstraksi tahun yang lebih tangguh
+                    // Use Date object for robust year extraction
                     const itemDateObj = new Date(item.date);
                     if (!isNaN(itemDateObj.getTime())) {
                         const year = String(itemDateObj.getFullYear());
@@ -559,21 +558,19 @@
             const currentMonthValue = String(today.getMonth() + 1).padStart(2, '0');
             const currentYearValue = String(today.getFullYear());
 
-            // Set filter bulan/tahun ke bulan/tahun saat ini jika ada
             if (monthFilter.find(`option[value="${currentMonthValue}"]`).length) {
                 monthFilter.val(currentMonthValue);
             }
             if (yearFilter.find(`option[value="${currentYearValue}"]`).length) {
                 yearFilter.val(currentYearValue);
             } else if (sortedYears.length > 0) {
-                // Jika tahun saat ini tidak ada, set ke tahun terbaru yang tersedia
                 yearFilter.val(sortedYears[0]);
             }
         }
 
         function renderLaporanTable(dataToRender) {
             const tableBody = $('#dataTable tbody');
-            tableBody.empty(); // Pastikan tbody dikosongkan sebelum diisi ulang
+            tableBody.empty();
 
             let totalInitialBalanceUnit = 0; 
             let totalInitialBalanceRp = 0;   
@@ -603,8 +600,8 @@
 
                 let latestExpenditureDate = item.expenditureDate || '';
                 const relevantRequests = permintaanBarangData.filter(request => 
-                    (request.nama_barang && request.nama_barang.toLowerCase() === (item.name || '').toLowerCase()) || 
-                    (request.kode_barang && request.kode_barang.toLowerCase() === (item.code || '').toLowerCase())
+                    (request.nama_barang && request.nama_barang.toLowerCase() === item.name.toLowerCase()) || 
+                    (request.kode_barang && request.kode_barang.toLowerCase() === item.code.toLowerCase())
                 );
 
                 if (relevantRequests.length > 0) {
@@ -613,28 +610,26 @@
                         const dateB = new Date(b.tanggal_permintaan);
                         return isNaN(dateA) ? 1 : (isNaN(dateB) ? -1 : dateB - dateA);
                     });
-                    latestExpenditureDate = relevantRequests[0].tanggal_permintaan || ''; // Pastikan tidak undefined
+                    latestExpenditureDate = relevantRequests[0].tanggal_permintaan;
                 }
 
-                // Akumulasi total
                 totalInitialBalanceUnit += initialBalanceUnitVal;
                 totalInitialBalanceRp += initialBalanceRpVal;
                 totalNewReceiptUnit += newReceiptUnitVal;     
-                totalNewReceiptRp += newReceiptRpVal;           
+                totalNewReceiptRp += newReceiptRpVal;         
                 totalPengeluaranUnit += expenditureUnitVal;
                 totalPengeluaranRp += expenditureRpVal;
                 totalSaldoAkhirUnit += finalStockUnitVal;
                 totalSaldoAkhirRp += finalStockRpVal;
 
-                // Buat baris tabel
                 const row = `
                     <tr>
                         <td class="text-center">${index + 1}</td>
-                        <td class="text-center">${item.code || ''}</td>
-                        <td class="text-center">${item.name || ''}</td>
-                        <td class="text-center">${item.unit || ''}</td>
+                        <td class="text-center">${item.code}</td>
+                        <td class="text-center">${item.name}</td>
+                        <td class="text-center">${item.unit}</td>
                         <td class="text-center">${formatCurrency(price)}</td>
-                        <td class="text-center print-hide">${item.date || ''}</td>
+                        <td class="text-center print-hide">${item.date}</td>
                         <td class="text-center">${initialBalanceUnitVal}</td>  
                         <td class="text-center">${formatCurrency(initialBalanceRpVal)}</td> 
                         <td class="text-center">${newReceiptUnitVal}</td>  
@@ -642,15 +637,14 @@
                         <td class="text-center">${expenditureUnitVal}</td>    
                         <td class="text-center">${formatCurrency(expenditureRpVal)}</td> 
                         <td class="text-center print-hide">${latestExpenditureDate}</td>
-                        <td class="text-center">${finalStockUnitVal}</td>    
+                        <td class="text-center">${finalStockUnitVal}</td>     
                         <td class="text-center">${formatCurrency(finalStockRpVal)}</td> 
                         <td class="text-center">${notes}</td>
                     </tr>
                 `;
-                tableBody.append(row); // Tambahkan baris ke tbody
+                tableBody.append(row);
             });
 
-            // Perbarui nilai total di footer tabel
             $('#totalInitialBalanceUnit').text(totalInitialBalanceUnit); 
             $('#totalInitialBalanceRp').text(formatCurrency(totalInitialBalanceRp)); 
             $('#totalNewReceiptUnit').text(totalNewReceiptUnit); 
@@ -660,14 +654,13 @@
             $('#totalSaldoAkhirUnit').text(totalSaldoAkhirUnit);
             $('#totalSaldoAkhirRp').text(formatCurrency(totalSaldoAkhirRp));
 
-            // Hancurkan dan inisialisasi ulang DataTable untuk memperbarui tampilan
             if ($.fn.DataTable.isDataTable('#dataTable')) {
                 $('#dataTable').DataTable().destroy();
             }
             $('#dataTable').DataTable({
                 "paging": true,
                 "lengthChange": true,
-                "searching": true, 
+                "searching": true, // <--- Ini yang mengaktifkan kotak pencarian otomatis
                 "ordering": true,
                 "info": true,
                 "autoWidth": false,
@@ -675,16 +668,15 @@
                 "columnDefs": [
                     { "orderable": false, "targets": [0, 5, 12, 15] }
                 ],
-                "columns": [ // Definisi kolom eksplisit
+                "columns": [
                     null, null, null, null, null,
-                    { "visible": true }, // Tanggal Masuk (Kolom 5)
+                    { "visible": true },
                     null, null, null, null, null, null,
-                    { "visible": true }, // Tanggal Pengeluaran Terakhir (Kolom 12)
+                    { "visible": true },
                     null, null, null
                 ]
             });
 
-            // Perbarui teks periode laporan untuk cetak
             const selectedMonthValue = $('#monthFilter').val();
             const selectedYearValue = $('#yearFilter').val();
             
@@ -703,9 +695,9 @@
             if (selectedMonthValue && selectedYearValue) {
                 displayPeriod = `Bulan ${displayMonth} ${displayYear}`;
             } else if (selectedMonthValue) {
-                displayPeriod = `Bulan ${displayMonth} (Semua Tahun)`; 
+                displayPeriod = `Bulan ${displayMonth} (${displayYear})`;
             } else if (selectedYearValue) {
-                displayPeriod = `Tahun ${displayYear} (Semua Bulan)`; 
+                displayPeriod = `Tahun ${displayYear} (${displayMonth})`;
             } else {
                 displayPeriod = `Semua Bulan dan Tahun`;
             }
@@ -713,15 +705,55 @@
             document.getElementById('reportPeriod').textContent = `Periode: ${displayPeriod}`;
         }
 
-        // Jalankan saat halaman dimuat
+        function performSearch() {
+            const allInventoryData = loadInventoryData();
+            const selectedMonth = $('#monthFilter').val();
+            const selectedYear = $('#yearFilter').val();
+
+            const filteredData = allInventoryData.filter(item => {
+                let matchesMonth = true;
+                let matchesYear = true;
+
+                if (item.date) {
+                    const itemDateObj = new Date(item.date); // Coba parse string tanggal menjadi objek Date
+
+                    if (!isNaN(itemDateObj.getTime())) { // Periksa apakah tanggal yang diparse valid
+                        const itemMonth = String(itemDateObj.getMonth() + 1).padStart(2, '0'); // Ambil bulan (0-11, jadi +1)
+                        const itemYear = String(itemDateObj.getFullYear()); // Ambil tahun
+
+                        if (selectedMonth) {
+                            matchesMonth = (itemMonth === selectedMonth);
+                        }
+                        if (selectedYear) {
+                            matchesYear = (itemYear === selectedYear);
+                        }
+                    } else {
+                        // Jika tanggal tidak valid, dan filter bulan/tahun aktif, jangan tampilkan
+                        if (selectedMonth || selectedYear) {
+                            return false; 
+                        }
+                    }
+                } else {
+                    // Jika item tidak memiliki tanggal, dan filter bulan/tahun aktif, jangan tampilkan
+                    if (selectedMonth || selectedYear) {
+                        return false;
+                    }
+                }
+                
+                return matchesMonth && matchesYear;
+            });
+            renderLaporanTable(filteredData);
+        }
+
+        // Initial render when page loads
         $(document).ready(function() {
             populateMonthAndYearFilters();
-            performSearch(); // Lakukan pencarian awal dengan bulan dan tahun yang terpilih secara default
+            performSearch(); // Perform initial search with default selected month and year
 
-            $('#monthFilter').on('change', performSearch); // Filter ulang saat bulan berubah
-            $('#yearFilter').on('change', performSearch);    // Filter ulang saat tahun berubah
+            $('#monthFilter').on('change', performSearch); // Re-filter on month change
+            $('#yearFilter').on('change', performSearch);   // Re-filter on year change
 
-            // Toggle menu profil
+            // Profile menu toggle
             const profileMenu = document.getElementById('profileMenu');
             if (profileMenu) {
                 profileMenu.addEventListener('click', function() {
@@ -729,7 +761,7 @@
                 });
             }
 
-            // Tutup dropdown jika diklik di luar
+            // Close dropdown if clicked outside
             window.addEventListener('click', function(event) {
                 if (profileMenu && !profileMenu.contains(event.target)) {
                     profileMenu.classList.remove('active');
