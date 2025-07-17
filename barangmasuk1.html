@@ -541,15 +541,19 @@
         </div>
         <nav>
             <ul>
-                <li><a href="beranda.html">Input Barang</a></li>
+                <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="inputbarang.html">Input Barang</a></li>
                 <li><a href="barangmasuk1.html">Barang Masuk</a></li>
                 <li><a href="inventaris.html">Permintaan Barang</a></li>
+<<<<<<< HEAD
                 <li>
                     <a href="pengaturan.html" class="active">
                         Daftar Permintaan
                         <span id="notificationBadge" class="notification-badge"></span>
                     </a>
                 </li>
+=======
+>>>>>>> 934faa44a913cbd42243c32f005e139aa51a1cf1
                 <li><a href="laporan.html">Cetak Laporan</a></li>
             </ul>
         </nav>
@@ -727,7 +731,7 @@
                 </div>
                 <div class="form-group">
                     <label for="itemPrice">Harga Satuan (Rp.)</label>
-                    <input type="number" id="itemPrice" placeholder="Masukkan Harga Satuan" required>
+                    <input type="number" id="itemPrice" placeholder="Masukkan Harga Satuan" required value="0">
                 </div>
                 <div class="form-group">
                     <label for="itemDate">Tanggal Masuk</label>
@@ -802,16 +806,15 @@
         const newReceiptRp = document.getElementById('newReceiptRp');     
         const expenditureUnit = document.getElementById('expenditureUnit');
         const expenditureRp = document.getElementById('expenditureRp');
-        const expenditureDateInput = document.getElementById('expenditureDate'); // New: Tanggal Pengeluaran Input
+        const expenditureDateInput = document.getElementById('expenditureDate');
         const finalStockUnit = document.getElementById('finalStockUnit');
         const finalStockRp = document.getElementById('finalStockRp');
         const itemNotes = document.getElementById('itemNotes');
         const inventoryTableBody = document.getElementById('inventoryTableBody');
         const searchInput = document.getElementById('searchInput');
         const searchButton = document.getElementById('searchButton'); 
-        const monthFilter = document.getElementById('monthFilter'); // Month filter
+        const monthFilter = document.getElementById('monthFilter');
 
-        // Elements for totals in the table footer
         const totalTableInitialBalanceUnit = document.getElementById('totalTableInitialBalanceUnit');
         const totalTableInitialBalanceRp = document.getElementById('totalTableInitialBalanceRp');
         const totalTableNewReceiptUnit = document.getElementById('totalTableNewReceiptUnit');     
@@ -821,7 +824,6 @@
         const totalTableFinalStockUnit = document.getElementById('totalTableFinalStockUnit');
         const totalTableFinalStockRp = document.getElementById('totalTableFinalStockRp');
 
-        // Elements for totals in the info boxes
         const totalInfoInitialBalanceUnit = document.getElementById('totalInfoInitialBalanceUnit');
         const totalInfoInitialBalanceRp = document.getElementById('totalInfoInitialBalanceRp');
         const totalInfoNewReceiptUnit = document.getElementById('totalInfoNewReceiptUnit');     
@@ -834,10 +836,8 @@
         const notificationBadge = document.getElementById('notificationBadge'); // Added for notification badge
 
         let inventoryData = JSON.parse(localStorage.getItem('inventoryData')) || [];
-        // Load permintaanBarangData from inventaris.html's localStorage
-        let permintaanBarangData = JSON.parse(localStorage.getItem('permintaanBarangData')) || []; // NEW
+        let permintaanBarangData = JSON.parse(localStorage.getItem('permintaanBarangData')) || [];
 
-        // Function to calculate and update Rp fields and final stock
         function updateCalculatedFields() {
             const price = parseFloat(itemPrice.value) || 0;
             const initialUnit = parseInt(initialBalanceUnit.value) || 0;
@@ -879,14 +879,14 @@
 
 
         function openModal(item = null) {
-            itemModal.style.display = 'flex'; // This line makes it visible
+            itemModal.style.display = 'flex';
             
             itemId.value = '';
             itemCode.value = '';
             itemName.value = '';
             itemType.value = '';
             itemUnit.value = '';
-            itemPrice.value = '0'; // Set to '0' so blur event correctly applies 0,00 if empty
+            itemPrice.value = '0';
             itemDate.value = '';
             initialBalanceUnit.value = 0;
             initialBalanceRp.value = 0;
@@ -894,7 +894,7 @@
             newReceiptRp.value = 0;
             expenditureUnit.value = 0;
             expenditureRp.value = 0;
-            expenditureDateInput.value = ''; // NEW: Clear expenditure date
+            expenditureDateInput.value = '';
             finalStockUnit.value = 0;
             finalStockRp.value = 0;
             itemNotes.value = '';
@@ -914,7 +914,7 @@
                 newReceiptRp.value = item.newReceiptRp;         
                 expenditureUnit.value = item.expenditureUnit;
                 expenditureRp.value = item.expenditureRp; 
-                expenditureDateInput.value = item.expenditureDate || ''; // NEW: Set expenditure date
+                expenditureDateInput.value = item.expenditureDate || '';
                 finalStockUnit.value = item.finalStockUnit; 
                 finalStockRp.value = item.finalStockRp; 
                 itemNotes.value = item.notes || '';
@@ -944,11 +944,10 @@
             let totalFinalUnit = 0;
             let totalFinalRp = 0;
 
-            // Use a Map to consolidate totals by item name and unit
             const consolidatedTotals = new Map();
 
             data.forEach(item => {
-                const key = `${item.name}-${item.unit}`; // Unique key for each item (name + unit)
+                const key = `${item.name || ''}-${item.unit || ''}`; // Handle undefined item.name or item.unit
                 if (!consolidatedTotals.has(key)) {
                     consolidatedTotals.set(key, {
                         initialBalanceUnit: 0,
@@ -975,7 +974,6 @@
                 consolidatedTotals.set(key, currentTotals);
             });
 
-            // Sum up the consolidated totals for the overall totals
             consolidatedTotals.forEach(totals => {
                 totalInitialUnit += totals.initialBalanceUnit;
                 totalInitialRp += totals.initialBalanceRp;
@@ -988,7 +986,6 @@
             });
 
 
-            // Update total fields in the table footer
             totalTableInitialBalanceUnit.textContent = totalInitialUnit;
             totalTableInitialBalanceRp.textContent = totalInitialRp.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             totalTableNewReceiptUnit.textContent = totalNewReceiptU;
@@ -998,7 +995,6 @@
             totalTableFinalStockUnit.textContent = totalFinalUnit;
             totalTableFinalStockRp.textContent = totalFinalRp.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-            // Update total fields in the info boxes
             totalInfoInitialBalanceUnit.textContent = totalInitialUnit;
             totalInfoInitialBalanceRp.textContent = `Rp ${totalInitialRp.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             totalInfoNewReceiptUnit.textContent = totalNewReceiptU;
@@ -1014,6 +1010,10 @@
             inventoryTableBody.innerHTML = '';
             
             data.forEach((item, index) => {
+                // Ensure item properties are not null/undefined before using .toLowerCase()
+                const itemNameLower = (item.name || '').toLowerCase();
+                const itemCodeLower = (item.code || '').toLowerCase();
+
                 const price = parseFloat(item.price) || 0;
                 const initialUnit = parseInt(item.initialBalanceUnit) || 0;
                 const initialRp = parseFloat(item.initialBalanceRp) || 0;
@@ -1025,30 +1025,34 @@
                 const finalRp = parseFloat(item.finalStockRp) || 0;
                 const notes = item.notes || '';
 
-                // LOGIC TO GET THE LATEST EXPENDITURE DATE FROM PERMINTAAN BARANG
                 let latestExpenditureDate = '';
-                // Filter permintaanBarangData for requests matching this item's code or name
-                const relevantRequests = permintaanBarangData.filter(request => 
-                    (request.nama_barang && request.nama_barang.toLowerCase() === item.name.toLowerCase()) || 
-                    (request.kode_barang && request.kode_barang.toLowerCase() === item.code.toLowerCase())
-                );
+                const relevantRequests = permintaanBarangData.filter(request => {
+                    // Add checks for request properties before using .toLowerCase()
+                    const requestNamaBarangLower = (request.nama_barang || '').toLowerCase();
+                    const requestKodeBarangLower = (request.kode_barang || '').toLowerCase();
+                    
+                    return (requestNamaBarangLower === itemNameLower) || 
+                           (requestKodeBarangLower === itemCodeLower);
+                });
 
                 if (relevantRequests.length > 0) {
-                    // Sort requests by date (latest first)
                     relevantRequests.sort((a, b) => new Date(b.tanggal_permintaan) - new Date(a.tanggal_permintaan));
-                    // Get the date from the latest request
-                    latestExpenditureDate = relevantRequests[0].tanggal_permintaan;
+                    latestExpenditureDate = relevantRequests[0].tanggal_permintaan || ''; // Ensure it's not undefined
                 }
-                // END LOGIC FOR EXPENDITURE DATE
+                
+                // If there's an expenditure date from the current item's data, prioritize it if it's later
+                if (item.expenditureDate && new Date(item.expenditureDate) > new Date(latestExpenditureDate)) {
+                    latestExpenditureDate = item.expenditureDate;
+                }
 
                 const row = `
                     <tr>
                         <td>${index + 1}</td>
-                        <td>${item.code}</td>
-                        <td>${item.name}</td>
-                        <td>${item.unit}</td>
+                        <td>${item.code || ''}</td>
+                        <td>${item.name || ''}</td>
+                        <td>${item.unit || ''}</td>
                         <td>${price.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td>${item.date}</td>
+                        <td>${item.date || ''}</td>
                         <td>${initialUnit}</td>
                         <td>${initialRp.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td>${newReceiptUnitVal}</td>
@@ -1115,7 +1119,7 @@
                 newReceiptRp: parseFloat(newReceiptRp.value) || 0,
                 expenditureUnit: parseInt(expenditureUnit.value) || 0,
                 expenditureRp: parseFloat(expenditureRp.value) || 0,
-                expenditureDate: expenditureDateInput.value, // NEW: Save expenditure date
+                expenditureDate: expenditureDateInput.value,
                 finalStockUnit: parseInt(finalStockUnit.value) || 0,
                 finalStockRp: parseFloat(finalStockRp.value) || 0,
                 notes: itemNotes.value || ''
@@ -1125,7 +1129,7 @@
                 if (formData.id && item.id === formData.id) {
                     return false;
                 }
-                return item.code.toLowerCase() === formData.code.toLowerCase();
+                return (item.code || '').toLowerCase() === formData.code.toLowerCase(); // Handle undefined item.code
             });
 
             if (isDuplicateCode) {
@@ -1151,9 +1155,10 @@
             const selectedMonth = monthFilter.value;
 
             const filteredData = inventoryData.filter(item => {
-                const matchesSearch = (item.name || '').toLowerCase().includes(searchTerm) || 
+                // Add checks for item properties before using .toLowerCase()
+                const matchesSearch = ((item.name || '').toLowerCase().includes(searchTerm) || 
                                       (item.code || '').toLowerCase().includes(searchTerm) ||
-                                      (item.notes || '').toLowerCase().includes(searchTerm);
+                                      (item.notes || '').toLowerCase().includes(searchTerm));
                 
                 let matchesMonth = true;
                 if (selectedMonth) {
