@@ -79,6 +79,29 @@
             color: var(--accent);
         }
 
+        /* Notification Badge Styles */
+        .notification-badge {
+            background-color: var(--accent); /* Orange color for notification */
+            color: var(--light);
+            border-radius: 50%;
+            padding: 2px 7px; /* Adjust padding to control size */
+            font-size: 0.7em;
+            position: absolute; /* Position relative to its parent <a> */
+            top: 5px; /* Adjust top and right to fine-tune position */
+            right: 5px;
+            transform: translate(50%, -50%); /* Center the badge */
+            min-width: 20px; /* Ensure it's wide enough for a single digit */
+            text-align: center;
+            line-height: 1.2;
+            display: none; /* Hidden by default, show only when there are notifications */
+        }
+
+        /* To ensure proper positioning of the badge */
+        nav ul li a {
+            position: relative;
+            padding-right: 25px; /* Add some padding to the right to make space for the badge */
+        }
+
         .profile-menu {
             position: relative;
             display: flex;
@@ -390,10 +413,15 @@
         <nav>
             <ul>
                 <li><a href="beranda.html">Input Barang</a></li>
-				<li><a href="barangmasuk1.html">Barang Masuk</a></li>
+                <li><a href="barangmasuk1.html">Barang Masuk</a></li>
                 <li><a href="inventaris.html">Permintaan Barang</a></li>
-                <li><a href="laporan.html" class="active">Cetak Laporan</a></li>
-                <li><a href="pengaturan.html">Pengaturan</a></li>
+                <li>
+                    <a href="pengaturan.html" class="active">
+                        Daftar Permintaan 
+                        <span id="notificationBadgeLaporan" class="notification-badge"></span>
+                    </a>
+                </li>
+                <li><a href="laporan.html">Cetak Laporan</a></li>
             </ul>
         </nav>
         <div class="profile-menu" id="profileMenu">
@@ -403,7 +431,7 @@
             <div class="dropdown-content">
                 <a href="#">Profil Saya</a>
                 <a href="#">Pengaturan Akun</a>
-                <a href="#">Keluar</a>
+                <a href="index.html">Keluar</a>
             </div>
         </div>
     </header>
@@ -660,7 +688,7 @@
             $('#dataTable').DataTable({
                 "paging": true,
                 "lengthChange": true,
-                "searching": true, // <--- Ini yang mengaktifkan kotak pencarian otomatis
+                "searching": true, 
                 "ordering": true,
                 "info": true,
                 "autoWidth": false,
@@ -715,11 +743,11 @@
                 let matchesYear = true;
 
                 if (item.date) {
-                    const itemDateObj = new Date(item.date); // Coba parse string tanggal menjadi objek Date
+                    const itemDateObj = new Date(item.date); 
 
-                    if (!isNaN(itemDateObj.getTime())) { // Periksa apakah tanggal yang diparse valid
-                        const itemMonth = String(itemDateObj.getMonth() + 1).padStart(2, '0'); // Ambil bulan (0-11, jadi +1)
-                        const itemYear = String(itemDateObj.getFullYear()); // Ambil tahun
+                    if (!isNaN(itemDateObj.getTime())) { 
+                        const itemMonth = String(itemDateObj.getMonth() + 1).padStart(2, '0'); 
+                        const itemYear = String(itemDateObj.getFullYear()); 
 
                         if (selectedMonth) {
                             matchesMonth = (itemMonth === selectedMonth);
@@ -728,13 +756,11 @@
                             matchesYear = (itemYear === selectedYear);
                         }
                     } else {
-                        // Jika tanggal tidak valid, dan filter bulan/tahun aktif, jangan tampilkan
                         if (selectedMonth || selectedYear) {
                             return false; 
                         }
                     }
                 } else {
-                    // Jika item tidak memiliki tanggal, dan filter bulan/tahun aktif, jangan tampilkan
                     if (selectedMonth || selectedYear) {
                         return false;
                     }
@@ -745,13 +771,31 @@
             renderLaporanTable(filteredData);
         }
 
+        function updateNotificationBadge() {
+            const permintaanBarangData = loadPermintaanBarangData();
+            const pendingRequests = permintaanBarangData.filter(req => 
+                req.status === 'Menunggu' || 
+                req.status === 'Menunggu Diskusi Pihak Inventaris' || 
+                req.status === 'Menunggu Diskusi Pihak Peminta'
+            );
+            
+            const notificationBadgeLaporan = document.getElementById('notificationBadgeLaporan');
+            if (pendingRequests.length > 0) {
+                notificationBadgeLaporan.textContent = pendingRequests.length;
+                notificationBadgeLaporan.style.display = 'inline-block';
+            } else {
+                notificationBadgeLaporan.style.display = 'none';
+            }
+        }
+
         // Initial render when page loads
         $(document).ready(function() {
             populateMonthAndYearFilters();
-            performSearch(); // Perform initial search with default selected month and year
+            performSearch(); 
+            updateNotificationBadge(); // Update badge on page load
 
-            $('#monthFilter').on('change', performSearch); // Re-filter on month change
-            $('#yearFilter').on('change', performSearch);   // Re-filter on year change
+            $('#monthFilter').on('change', performSearch); 
+            $('#yearFilter').on('change', performSearch);   
 
             // Profile menu toggle
             const profileMenu = document.getElementById('profileMenu');

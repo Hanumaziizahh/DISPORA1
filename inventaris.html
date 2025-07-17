@@ -406,6 +406,47 @@
             padding-left: 0.5rem;
         }
 
+        .date-filter-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 1rem; /* Adjust as needed */
+            flex-wrap: wrap;
+        }
+
+        .date-filter-container label {
+            white-space: nowrap; /* Prevent label from wrapping */
+        }
+
+        .date-filter-container input[type="date"] {
+            flex: 1; /* Allow inputs to grow */
+            min-width: 150px; /* Minimum width for date input */
+        }
+
+        /* Notification Badge Styles */
+        .notification-badge {
+            background-color: var(--accent); /* Orange color for notification */
+            color: var(--light);
+            border-radius: 50%;
+            padding: 2px 7px; /* Adjust padding to control size */
+            font-size: 0.7em;
+            position: absolute; /* Position relative to its parent <a> */
+            top: 5px; /* Adjust top and right to fine-tune position */
+            right: 5px;
+            transform: translate(50%, -50%); /* Center the badge */
+            min-width: 20px; /* Ensure it's wide enough for a single digit */
+            text-align: center;
+            line-height: 1.2;
+            display: none; /* Hidden by default, show only when there are notifications */
+        }
+
+        /* To ensure proper positioning of the badge */
+        nav ul li a {
+            position: relative;
+            padding-right: 25px; /* Add some padding to the right to make space for the badge */
+        }
+
+
         footer {
             text-align: center;
             padding: 1.5rem;
@@ -462,6 +503,13 @@
             .search-container input {
                 max-width: 100%; /* Input search ambil lebar penuh di mobile */
             }
+            .date-filter-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .date-filter-container input[type="date"] {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -477,10 +525,15 @@
         <nav>
             <ul>
                 <li><a href="beranda.html">Input Barang</a></li>
-				<li><a href="barangmasuk1.html">Barang Masuk</a></li>
+                <li><a href="barangmasuk1.html">Barang Masuk</a></li>
                 <li><a href="inventaris.html" class="active">Permintaan Barang</a></li>
+                <li>
+                    <a href="pengaturan.html">
+                        Daftar Permintaan 
+                        <span id="notificationBadge" class="notification-badge"></span>
+                    </a>
+                </li>
                 <li><a href="laporan.html">Cetak Laporan</a></li>
-                <li><a href="pengaturan.html">Pengaturan</a></li>
             </ul>
         </nav>
         <div class="profile-menu" id="profileMenu">
@@ -490,7 +543,7 @@
             <div class="dropdown-content">
                 <a href="profile.html">Profil</a>
                 <a href="settings.html">Pengaturan</a>
-                <a href="login.html">Logout</a>
+                <a href="index.html">Logout</a>
             </div>
         </div>
     </header>
@@ -507,6 +560,13 @@
             
             <div class="search-container">
                 <input type="text" id="searchRequest" placeholder="Cari berdasarkan Nama Barang, Kode, atau Bidang...">
+            </div>
+
+            <div class="date-filter-container">
+                <label for="startDate">Dari Tanggal:</label>
+                <input type="date" id="startDate">
+                <label for="endDate">Sampai Tanggal:</label>
+                <input type="date" id="endDate">
             </div>
         </div>
 
@@ -615,6 +675,9 @@
         const requestHistoryTableBody = document.getElementById('requestHistoryTableBody');
         const itemCodesDatalist = document.getElementById('itemCodes');
         const searchRequestInput = document.getElementById('searchRequest'); // Search input
+        const startDateInput = document.getElementById('startDate'); // New: Start Date input
+        const endDateInput = document.getElementById('endDate');   // New: End Date input
+        const notificationBadge = document.getElementById('notificationBadge'); // Added for notification badge
 
         // Modal Elements
         const requestItemModal = document.getElementById('requestItemModal');
@@ -670,19 +733,42 @@
             }
         }
 
+        function updateNotificationBadge() {
+            const pendingRequests = permintaanBarangData.filter(req => 
+                req.status === 'Menunggu' || 
+                req.status === 'Menunggu Diskusi Pihak Inventaris' || 
+                req.status === 'Menunggu Diskusi Pihak Peminta'
+            );
+            
+            if (pendingRequests.length > 0) {
+                notificationBadge.textContent = pendingRequests.length;
+                notificationBadge.style.display = 'inline-block'; // Show the badge
+            } else {
+                notificationBadge.style.display = 'none'; // Hide the badge if no pending requests
+            }
+        }
+
         function renderRequestHistory(filterText = '') {
             requestHistoryTableBody.innerHTML = '';
             // Pastikan permintaanBarangData sudah dimuat dengan benar sebelum diurutkan
             const sortedRequests = [...permintaanBarangData].sort((a, b) => new Date(b.tanggal_permintaan) - new Date(a.tanggal_permintaan));
             
+            const lowerCaseFilter = filterText.toLowerCase();
+            const start = startDateInput.value ? new Date(startDateInput.value) : null;
+            const end = endDateInput.value ? new Date(endDateInput.value) : null;
+
             const filteredRequests = sortedRequests.filter(req => {
-                const lowerCaseFilter = filterText.toLowerCase();
-                return (
+                const matchesSearch = (
                     (req.kode && req.kode.toLowerCase().includes(lowerCaseFilter)) ||
                     (req.nama_barang && req.nama_barang.toLowerCase().includes(lowerCaseFilter)) ||
                     (req.bidang && req.bidang.toLowerCase().includes(lowerCaseFilter)) ||
                     (req.status && req.status.toLowerCase().includes(lowerCaseFilter))
                 );
+
+                const requestDate = new Date(req.tanggal_permintaan);
+                const matchesDateRange = (!start || requestDate >= start) && (!end || requestDate <= end);
+                
+                return matchesSearch && matchesDateRange;
             });
 
             if (filteredRequests.length === 0) {
@@ -726,6 +812,7 @@
                     deleteRequest(id);
                 });
             });
+            updateNotificationBadge(); // Update badge after rendering the table
         }
 
         // Delete Request Function
@@ -909,8 +996,17 @@
         });
 
         // Event Listener for Search Input
-        searchRequestInput.addEventListener('input', (e) => {
-            renderRequestHistory(e.target.value);
+        searchRequestInput.addEventListener('input', () => {
+            renderRequestHistory(searchRequestInput.value);
+        });
+
+        // New Event Listeners for Date Filters
+        startDateInput.addEventListener('change', () => {
+            renderRequestHistory(searchRequestInput.value);
+        });
+
+        endDateInput.addEventListener('change', () => {
+            renderRequestHistory(searchRequestInput.value);
         });
 
 
@@ -934,6 +1030,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             renderDatalist();
             renderRequestHistory(); // Panggil saat DOM selesai dimuat
+            updateNotificationBadge(); // Initial call to display badge
         });
     </script>
 </body>

@@ -238,8 +238,7 @@
 
         button.add-button,
         .import-button,
-        .import-image-button,
-        button.notification-button { /* Added notification-button */
+        .import-image-button {
             background-color: var(--accent);
             color: var(--light);
             padding: 0.75rem 1.5rem;
@@ -253,26 +252,31 @@
 
         button.add-button:hover,
         .import-button:hover,
-        .import-image-button:hover,
-        button.notification-button:hover {
+        .import-image-button:hover {
             background-color: #e65c00;
         }
 
-        .notification-badge { /* Style for the notification badge */
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background-color: #dc3545; /* Red color for notification */
-            color: white;
+        /* Notification Badge Styles */
+        .notification-badge {
+            background-color: var(--accent); /* Orange color for notification */
+            color: var(--light);
             border-radius: 50%;
-            padding: 0.3em 0.6em;
-            font-size: 0.75em;
-            font-weight: bold;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-width: 20px; /* Ensure badge is visible for single digit */
-            height: 20px;
+            padding: 2px 7px; /* Adjust padding to control size */
+            font-size: 0.7em;
+            position: absolute; /* Position relative to its parent <a> */
+            top: 5px; /* Adjust top and right to fine-tune position */
+            right: 5px;
+            transform: translate(50%, -50%); /* Center the badge */
+            min-width: 20px; /* Ensure it's wide enough for a single digit */
+            text-align: center;
+            line-height: 1.2;
+            display: none; /* Hidden by default, show only when there are notifications */
+        }
+        
+        /* To ensure proper positioning of the badge */
+        nav ul li a {
+            position: relative;
+            padding-right: 25px; /* Add some padding to the right to make space for the badge */
         }
         
         /* Style for the hidden file input */
@@ -592,7 +596,7 @@
                 flex-direction: column;
                 align-items: stretch;
             }
-            button.add-button, .import-button, .import-image-button, button.notification-button {
+            button.add-button, .import-button, .import-image-button {
                 width: 100%;
             }
             .info-boxes {
@@ -629,11 +633,16 @@
         </div>
         <nav>
             <ul>
-                <li><a href="beranda.html" class="active">Input Barang</a></li>
+                <li><a href="beranda.html">Input Barang</a></li>
                 <li><a href="barangmasuk1.html">Barang Masuk</a></li>
                 <li><a href="inventaris.html">Permintaan Barang</a></li>
+                <li>
+                    <a href="pengaturan.html" class="active" style="position: relative;">
+                        Daftar Permintaan 
+                        <span id="notificationBadgeBeranda" class="notification-badge"></span>
+                    </a>
+                </li>
                 <li><a href="laporan.html">Cetak Laporan</a></li>
-                <li><a href="pengaturan.html">Pengaturan</a></li>
             </ul>
         </nav>
         <div class="profile-menu" id="profileMenu">
@@ -643,7 +652,7 @@
             <div class="dropdown-content">
                 <a href="profile.html">Profil</a>
                 <a href="settings.html">Pengaturan</a>
-                <a href="login.html">Logout</a>
+                <a href="index.html">Logout</a>
             </div>
         </div>
     </header>
@@ -657,10 +666,6 @@
             </div>
             <div class="action-buttons-group">
                 <button class="add-button" id="openModal">Tambah Barang</button>
-                <button class="notification-button" id="openNotificationModal">
-                    Permintaan Pending
-                    <span class="notification-badge" id="pendingRequestCount">0</span>
-                </button>
             </div>
         </div>
         
@@ -774,32 +779,6 @@
         </div>
     </div>
 
-    <div id="notificationModal" class="modal modal-large">
-        <div class="modal-content">
-            <span class="close-button" id="closeNotificationModal">&times;</span>
-            <h3>Daftar Permintaan Barang (Perlu Persetujuan)</h3>
-            <div style="overflow-x: auto; max-height: 60vh;"> <table class="inventory-table request-table">
-                    <thead>
-                        <tr>
-                            <th>No.</th>
-                            <th>Kode Barang</th>
-                            <th>Nama Barang</th>
-                            <th>Jumlah Diminta</th>
-                            <th>Tanggal Permintaan</th>
-                            <th>Bidang</th>
-                            <th>Status</th>
-                            <th>Catatan Bendahara</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="notificationRequestTableBody">
-                        </tbody>
-                </table>
-            </div>
-            <p id="noPendingRequestsMessage" style="text-align: center; margin-top: 1rem; display: none;">Tidak ada permintaan barang yang perlu persetujuan.</p>
-        </div>
-    </div>
-
     <script>
         const openModalBtn = document.getElementById('openModal');
         const closeModalBtn = document.getElementById('closeModal');
@@ -840,14 +819,8 @@
         const newApprovalDiscussionMessageInput = document.getElementById('newApprovalDiscussionMessage');
         const sendApprovalDiscussionMessageButton = document.getElementById('sendApprovalDiscussionMessageButton');
 
-        // Notification Modal elements
-        const openNotificationModalBtn = document.getElementById('openNotificationModal');
-        const closeNotificationModalBtn = document.getElementById('closeNotificationModal');
-        const notificationModal = document.getElementById('notificationModal');
-        const notificationRequestTableBody = document.getElementById('notificationRequestTableBody');
-        const pendingRequestCountBadge = document.getElementById('pendingRequestCount');
-        const noPendingRequestsMessage = document.getElementById('noPendingRequestsMessage');
-
+        // Notification Badge element for Beranda
+        const notificationBadgeBeranda = document.getElementById('notificationBadgeBeranda');
 
         let inventoryData = JSON.parse(localStorage.getItem('inventoryDataBarangMasuk')) || [];
         let permintaanBarangData = JSON.parse(localStorage.getItem('permintaanBarangData')) || [];
@@ -887,48 +860,6 @@
                 button.addEventListener('click', (e) => deleteItem(e.target.dataset.id));
             });
         }
-
-        function handleNotificationRequests() {
-            notificationRequestTableBody.innerHTML = '';
-            // Filter requests that are 'Menunggu', 'Menunggu Diskusi Pihak Inventaris' or 'Menunggu Diskusi Pihak Peminta'
-            const pendingRequests = permintaanBarangData.filter(req => 
-                req.status === 'Menunggu' || 
-                req.status === 'Menunggu Diskusi Pihak Inventaris' || 
-                req.status === 'Menunggu Diskusi Pihak Peminta'
-            );
-            
-            pendingRequestCountBadge.textContent = pendingRequests.length;
-
-            if (pendingRequests.length === 0) {
-                noPendingRequestsMessage.style.display = 'block';
-            } else {
-                noPendingRequestsMessage.style.display = 'none';
-                pendingRequests.forEach((req, index) => {
-                    const statusClass = `status-${req.status.toLowerCase().replace(/\s/g, '')}`;
-                    const row = `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${req.kode}</td>
-                            <td>${req.nama_barang}</td>
-                            <td>${req.jumlah_diminta}</td>
-                            <td>${req.tanggal_permintaan}</td>
-                            <td>${req.bidang}</td>
-                            <td class="${statusClass}">${req.status}</td>
-                            <td>${req.catatan_bendahara || '-'}</td>
-                            <td class="action-buttons">
-                                <button class="approve-button" data-id="${req.id}">Tinjau</button>
-                            </td>
-                        </tr>
-                    `;
-                    notificationRequestTableBody.innerHTML += row;
-                });
-            }
-
-            document.querySelectorAll('#notificationModal .approve-button').forEach(button => {
-                button.addEventListener('click', (e) => openRequestApprovalModal(e.target.dataset.id));
-            });
-        }
-
 
         function openAddModal() {
             itemForm.reset();
@@ -992,7 +923,6 @@
                 newApprovalDiscussionMessageInput.value = ''; // Clear message input
 
                 requestApprovalModal.style.display = 'flex';
-                notificationModal.style.display = 'none'; // Hide notification modal if open
             }
         }
 
@@ -1048,29 +978,17 @@
             localStorage.setItem('permintaanBarangData', JSON.stringify(permintaanBarangData));
             renderApprovalDiscussionLog(currentRequest.discussionLog); // Update discussion log in modal
             newApprovalDiscussionMessageInput.value = ''; // Clear input
-            handleNotificationRequests(); // Re-render main table to reflect status change
             alert('Balasan berhasil dikirim!');
             detailStatus.textContent = currentRequest.status; // Update status displayed in the modal
+            updateNotificationBadgeOnBeranda(); // Update notification badge
         });
         // --- End Discussion Log for Approval Modal ---
-
-        // Notification Modal Functions
-        function openNotificationModal() {
-            handleNotificationRequests(); // Re-render pending requests every time it's opened
-            notificationModal.style.display = 'flex';
-        }
-
-        function closeNotificationModal() {
-            notificationModal.style.display = 'none';
-        }
 
         // Event Listeners for Modals
         openModalBtn.addEventListener('click', openAddModal);
         closeModalBtn.addEventListener('click', closeItemModal);
         cancelButton.addEventListener('click', closeItemModal);
         closeRequestApprovalModalBtn.addEventListener('click', closeRequestApprovalModal);
-        openNotificationModalBtn.addEventListener('click', openNotificationModal);
-        closeNotificationModalBtn.addEventListener('click', closeNotificationModal);
 
         // Close modals if clicked outside
         itemModal.addEventListener('click', (e) => {
@@ -1082,12 +1000,6 @@
         requestApprovalModal.addEventListener('click', (e) => {
             if (e.target === requestApprovalModal) {
                 closeRequestApprovalModal();
-            }
-        });
-
-        notificationModal.addEventListener('click', (e) => {
-            if (e.target === notificationModal) {
-                closeNotificationModal();
             }
         });
 
@@ -1191,8 +1103,8 @@
             alert(`Permintaan berhasil ${approvedQuantity > 0 ? 'disetujui' : 'ditolak'}!`);
             
             renderInventoryTable(inventoryData);
-            handleNotificationRequests();
             closeRequestApprovalModal();
+            updateNotificationBadgeOnBeranda(); // Update notification badge
         });
 
         rejectRequestButton.addEventListener('click', () => {
@@ -1209,9 +1121,9 @@
                 });
                 localStorage.setItem('permintaanBarangData', JSON.stringify(permintaanBarangData));
                 
-                handleNotificationRequests();
                 alert('Permintaan berhasil ditolak!');
                 closeRequestApprovalModal();
+                updateNotificationBadgeOnBeranda(); // Update notification badge
             }
         });
 
@@ -1231,9 +1143,26 @@
             });
         }
 
+        // Function to update the notification badge on Beranda
+        function updateNotificationBadgeOnBeranda() {
+            let permintaanBarangData = JSON.parse(localStorage.getItem('permintaanBarangData')) || [];
+            const pendingRequests = permintaanBarangData.filter(req =>
+                req.status === 'Menunggu' ||
+                req.status === 'Menunggu Diskusi Pihak Inventaris' ||
+                req.status === 'Menunggu Diskusi Pihak Peminta'
+            );
+
+            if (pendingRequests.length > 0) {
+                notificationBadgeBeranda.textContent = pendingRequests.length;
+                notificationBadgeBeranda.style.display = 'inline-block';
+            } else {
+                notificationBadgeBeranda.style.display = 'none';
+            }
+        }
+
         // Initial renders when page loads
         renderInventoryTable(inventoryData);
-        handleNotificationRequests();
+        document.addEventListener('DOMContentLoaded', updateNotificationBadgeOnBeranda); // Call on load to set initial badge state
     </script>
 </body>
 </html>
